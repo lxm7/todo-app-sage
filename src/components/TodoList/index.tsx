@@ -18,6 +18,8 @@ export interface Todo {
   completed: boolean;
 }
 
+type EditTodoVariables = Required<Pick<Todo, "id" | "text">>;
+
 const TodoList: React.FC = () => {
   const queryClient = useQueryClient();
   const {
@@ -51,12 +53,6 @@ const TodoList: React.FC = () => {
     },
   });
 
-  // Mutation for editing a todo
-  interface EditTodoVariables {
-    id: string;
-    text: string;
-  }
-
   const editTodoMutation = useMutation<Todo, Error, EditTodoVariables>({
     mutationFn: patchTodo,
     onSuccess: () => {
@@ -64,14 +60,7 @@ const TodoList: React.FC = () => {
     },
   });
 
-  // Mutation for toggling a todo's completed status
-  interface ToggleTodoVariables {
-    id: string;
-    text: string;
-    completed: boolean;
-  }
-
-  const toggleTodoMutation = useMutation<Todo, Error, ToggleTodoVariables>({
+  const toggleTodoMutation = useMutation<Todo, Error, Todo>({
     mutationFn: toggleTodo,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
@@ -111,45 +100,95 @@ const TodoList: React.FC = () => {
 
   return (
     <Box margin="var(--spacing200)">
-      <div>
-        <TextBox
-          id="new-todo-input"
-          label="New Todo"
-          value={newTodoText}
-          placeholder="Enter todo..."
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            setNewTodoText(event.target.value)
-          }
-        />
+      <div
+        style={{
+          marginBottom: "2rem",
+          paddingBottom: "2rem",
+          display: "flex",
+          borderBottom: "1px solid #ccc",
+          gap: "1rem", // Adds spacing between elements
+          alignItems: "flex-end",
+        }}
+      >
+        <div style={{ flex: 1 }}>
+          <TextBox
+            id="new-todo-input"
+            label="New Todo"
+            value={newTodoText}
+            placeholder="Enter todo..."
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              setNewTodoText(event.target.value)
+            }
+          />
+        </div>
         <Button onClick={handleAddTodo}>Add Todo</Button>
       </div>
 
       <div>
         {todos.map((todo: Todo) => (
-          <div key={todo.id}>
-            <Checkbox
-              id={`todo-${todo.id}`}
-              label={todo.text}
-              checked={todo.completed}
-              onChange={() =>
-                handleToggleCompleted({ ...todo, completed: !todo.completed })
-              }
-            />
+          <div
+            key={todo.id}
+            style={{
+              marginBottom: "1rem",
+              paddingBottom: "1rem",
+              display: "flex",
+              borderBottom: "1px solid #ccc",
+              gap: "1rem",
+              alignItems: "center",
+              width: "100%", // Ensure full width
+            }}
+          >
+            {/* Checkbox Section - Left-aligned */}
+            <div style={{ flexShrink: 0 }}>
+              <Checkbox
+                id={`todo-${todo.id}`}
+                label={todo.text}
+                checked={todo.completed}
+                onChange={() =>
+                  handleToggleCompleted({ ...todo, completed: !todo.completed })
+                }
+              />
+            </div>
 
+            {/* Middle Section - Grows to available space */}
             {editTodoId === todo.id ? (
-              <>
-                <TextBox
-                  id={`edit-todo-${todo.id}`}
-                  value={editText}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setEditText(e.target.value)
-                  }
-                />
-                <Button onClick={() => handleEditTodo(todo.id)}>Save</Button>
-                <Button onClick={() => setEditTodoId(null)}>Cancel</Button>
-              </>
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  gap: "1rem",
+                  alignItems: "center",
+                }}
+              >
+                <div style={{ flex: 1, width: "100%" }}>
+                  <TextBox
+                    id={`edit-todo-${todo.id}`}
+                    value={editText}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setEditText(e.target.value)
+                    }
+                  />
+                </div>
+                <div
+                  style={{
+                    marginLeft: "auto", // Pushes buttons to far right
+                    display: "flex",
+                    gap: "1rem",
+                  }}
+                >
+                  <Button onClick={() => handleEditTodo(todo.id)}>Save</Button>
+                  <Button onClick={() => setEditTodoId(null)}>Cancel</Button>
+                </div>
+              </div>
             ) : (
-              <>
+              /* Right-aligned Buttons Section */
+              <div
+                style={{
+                  marginLeft: "auto", // Pushes buttons to far right
+                  display: "flex",
+                  gap: "1rem",
+                }}
+              >
                 <Button
                   onClick={() => {
                     setEditTodoId(todo.id);
@@ -161,7 +200,7 @@ const TodoList: React.FC = () => {
                 <Button onClick={() => handleDeleteTodo(todo.id)}>
                   Delete
                 </Button>
-              </>
+              </div>
             )}
           </div>
         ))}
