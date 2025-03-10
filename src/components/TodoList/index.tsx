@@ -12,7 +12,7 @@ import {
   patchTodo,
   toggleTodo,
 } from "../../api";
-interface Todo {
+export interface Todo {
   id: string;
   text: string;
   completed: boolean;
