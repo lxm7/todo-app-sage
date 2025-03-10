@@ -1,12 +1,13 @@
 import Typography from "carbon-react/lib/components/typography";
-
+import TodoList from "./components/TodoList";
 import "./App.css";
 
 function App() {
   return (
     <div className="App">
       <header>
-        <Typography>Hello Carbon</Typography>
+        <Typography variant="h1">Todo app</Typography>
+        <TodoList />
       </header>
     </div>
   );

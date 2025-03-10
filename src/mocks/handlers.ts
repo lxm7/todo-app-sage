@@ -17,12 +17,15 @@ let allTodos: Map<string, Todo> = new Map<string, Todo>([
 ]);
 
 export const handlers = [
+  // GET favicon to remove warning
   http.get("/favicon.ico", ({ request }) => {
     return HttpResponse.text("", { status: 200 });
   }),
-  http.get("/todos", () => {
+  // GET ALL
+  http.get("/todos", ({ request }) => {
     return HttpResponse.json(Array.from(allTodos.values()));
   }),
+  // ADD
   http.post("/todos", async ({ request }) => {
     const { text } = (await request.json()) as TodoTextInput;
 
@@ -38,7 +41,8 @@ export const handlers = [
     // response and send back the newly created post!
     return HttpResponse.json(newTodo, { status: 201 });
   }),
-  http.delete("/todo/:id", ({ params }) => {
+  // DELETE
+  http.delete("/todo/:id", ({ request, params }) => {
     // All request path params are provided in the "params"
     // argument of the response resolver.
     const { id } = params;
@@ -58,6 +62,7 @@ export const handlers = [
     // Respond with a "200 OK" response and the deleted Todo.
     return HttpResponse.json(deletedTodo);
   }),
+  // UPDATE
   http.patch("/todo/:id", async ({ request, params }) => {
     const { id } = params;
     // Type-assert the JSON payload as an update to the Todo.
