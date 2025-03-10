@@ -4,10 +4,13 @@ import CarbonProvider from "carbon-react/lib/components/carbon-provider";
 import sageTheme from "carbon-react/lib/style/themes/sage";
 import GlobalStyle from "carbon-react/lib/style/global-style";
 import "carbon-react/lib/style/fonts.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import "./index.css";
+// import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+
+const queryClient = new QueryClient();
 
 async function enableMocking() {
   if (process.env.NODE_ENV !== "development") {
@@ -25,9 +28,11 @@ enableMocking().then(() => {
   root.render(
     <CarbonProvider theme={sageTheme}>
       <GlobalStyle />
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      </QueryClientProvider>
     </CarbonProvider>
   );
 });

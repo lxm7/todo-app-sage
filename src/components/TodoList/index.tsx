@@ -1,8 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Button from "carbon-react/lib/components/button";
 import TextBox from "carbon-react/lib/components/textbox";
 import { Checkbox } from "carbon-react/lib/components/checkbox";
+import Box from "carbon-react/lib/components/box";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
+import {
+  fetchTodos,
+  postTodo,
+  removeTodo,
+  patchTodo,
+  toggleTodo,
+} from "../../api";
 interface Todo {
   id: string;
   text: string;
@@ -10,126 +19,121 @@ interface Todo {
 }
 
 const TodoList: React.FC = () => {
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const queryClient = useQueryClient();
+  const {
+    data: todos,
+    error,
+    isLoading,
+  } = useQuery<Todo[], Error>({
+    queryKey: ["todos"],
+    queryFn: fetchTodos,
+    initialData: [],
+  });
+
+  // Local states for form inputs and edit UI
   const [newTodoText, setNewTodoText] = useState<string>("");
   const [editTodoId, setEditTodoId] = useState<string | null>(null);
   const [editText, setEditText] = useState<string>("");
 
-  // Fetch initial todos using the GET /todos mock endpoint
-  useEffect(() => {
-    fetch("/todos")
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to fetch todos");
-        }
-        return res.json();
-      })
-      .then((data) => setTodos(data))
-      .catch((error) => console.error(error));
-  }, []);
+  // Mutation for adding a new todo
+  const addTodoMutation = useMutation<Todo, Error, string>({
+    mutationFn: postTodo,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    },
+  });
 
-  // Add a new todo by calling the POST /todos endpoint
-  const handleAddTodo = async () => {
-    if (!newTodoText.trim()) return;
+  // Mutation for deleting a todo
+  const deleteTodoMutation = useMutation<void, Error, string>({
+    mutationFn: removeTodo,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    },
+  });
 
-    try {
-      const res = await fetch("/todos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: newTodoText }),
-      });
-      if (!res.ok) {
-        throw new Error("Failed to add todo");
-      }
-      const newTodo: Todo = await res.json();
-      setTodos((prev) => [...prev, newTodo]);
+  // Mutation for editing a todo
+  interface EditTodoVariables {
+    id: string;
+    text: string;
+  }
+
+  const editTodoMutation = useMutation<Todo, Error, EditTodoVariables>({
+    mutationFn: patchTodo,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    },
+  });
+
+  // Mutation for toggling a todo's completed status
+  interface ToggleTodoVariables {
+    id: string;
+    text: string;
+    completed: boolean;
+  }
+
+  const toggleTodoMutation = useMutation<Todo, Error, ToggleTodoVariables>({
+    mutationFn: toggleTodo,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    },
+  });
+
+  // Handlers for actions
+  const handleAddTodo = () => {
+    if (newTodoText.trim()) {
+      addTodoMutation.mutate(newTodoText);
       setNewTodoText("");
-    } catch (error) {
-      console.error(error);
     }
   };
 
-  // Delete a todo by calling the DELETE /todo/:id endpoint
-  const handleDeleteTodo = async (id: string) => {
-    try {
-      const res = await fetch(`/todo/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        throw new Error("Failed to delete todo");
-      }
-      // Optionally, you could verify the response data here
-      await res.json();
-      setTodos((prev) => prev.filter((todo) => todo.id !== id));
-    } catch (error) {
-      console.error(error);
-    }
+  const handleDeleteTodo = (id: string) => {
+    deleteTodoMutation.mutate(id);
   };
 
-  // Edit a todo by calling the PATCH /todo/:id endpoint with { text: newText }
-  const handleEditTodo = async (id: string, newText: string) => {
-    try {
-      const res = await fetch(`/todo/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: newText }),
-      });
-      if (!res.ok) {
-        throw new Error("Failed to update todo");
-      }
-      const updatedTodo: Todo = await res.json();
-      setTodos((prev) =>
-        prev.map((todo) => (todo.id === id ? updatedTodo : todo))
-      );
+  const handleEditTodo = (id: string) => {
+    if (editText.trim()) {
+      editTodoMutation.mutate({ id, text: editText });
       setEditTodoId(null);
-    } catch (error) {
-      console.error(error);
     }
   };
 
-  // Optionally implement toggle of completion status. Note: For this to work,
-  // your PATCH handler should also merge a "completed" property; update your types if needed.
-  const handleToggleCompleted = async (id: string, current: boolean) => {
-    // Find the current todo so that we can keep its text
-    const todo = todos.find((t) => t.id === id);
-    if (!todo) return;
-    try {
-      const res = await fetch(`/todo/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: todo.text, completed: !current }),
-      });
-      if (!res.ok) {
-        throw new Error("Failed to toggle todo");
-      }
-      const updatedTodo: Todo = await res.json();
-      setTodos((prev) => prev.map((t) => (t.id === id ? updatedTodo : t)));
-    } catch (error) {
-      console.error(error);
-    }
+  const handleToggleCompleted = (todo: Todo) => {
+    console.log({ todo });
+    toggleTodoMutation.mutate({
+      id: todo.id,
+      text: todo.text,
+      completed: !todo.completed,
+    });
   };
+
+  if (isLoading) return <div>Loading todos...</div>;
+  if (error) return <div>Error loading todos</div>;
 
   return (
-    <div>
+    <Box margin="var(--spacing200)">
       <div>
         <TextBox
           id="new-todo-input"
           label="New Todo"
           value={newTodoText}
           placeholder="Enter todo..."
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setNewTodoText(e.target.value)
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+            setNewTodoText(event.target.value)
           }
         />
         <Button onClick={handleAddTodo}>Add Todo</Button>
       </div>
 
       <div>
-        {todos.map((todo) => (
+        {todos.map((todo: Todo) => (
           <div key={todo.id}>
             <Checkbox
               id={`todo-${todo.id}`}
               label={todo.text}
               checked={todo.completed}
-              onChange={() => handleToggleCompleted(todo.id, todo.completed)}
+              onChange={() =>
+                handleToggleCompleted({ ...todo, completed: !todo.completed })
+              }
             />
 
             {editTodoId === todo.id ? (
@@ -141,9 +145,7 @@ const TodoList: React.FC = () => {
                     setEditText(e.target.value)
                   }
                 />
-                <Button onClick={() => handleEditTodo(todo.id, editText)}>
-                  Save
-                </Button>
+                <Button onClick={() => handleEditTodo(todo.id)}>Save</Button>
                 <Button onClick={() => setEditTodoId(null)}>Cancel</Button>
               </>
             ) : (
@@ -164,7 +166,7 @@ const TodoList: React.FC = () => {
           </div>
         ))}
       </div>
-    </div>
+    </Box>
   );
 };
 

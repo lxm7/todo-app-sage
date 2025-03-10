@@ -7,13 +7,13 @@ interface Todo {
   completed: boolean;
 }
 
-type TodoTextInput = Pick<Todo, "text">;
+type TodoTextInput = Partial<Pick<Todo, "text" | "completed">>;
 
 // Initial in-memory list of todos
 let allTodos: Map<string, Todo> = new Map<string, Todo>([
   ["1", { id: "1", text: "Buy groceries", completed: false }],
   ["2", { id: "2", text: "Walk the dog", completed: true }],
-  ["2", { id: "3", text: "Code project", completed: true }],
+  ["3", { id: "3", text: "Code project", completed: true }],
 ]);
 
 export const handlers = [
@@ -23,6 +23,7 @@ export const handlers = [
   }),
   // GET ALL
   http.get("/todos", ({ request }) => {
+    console.log({ allTodos });
     return HttpResponse.json(Array.from(allTodos.values()));
   }),
   // ADD
@@ -32,7 +33,7 @@ export const handlers = [
     // Create a new todo object with a generated UUID.
     const newTodo: Todo = {
       id: uuidv4(),
-      text,
+      text: text || "",
       completed: false,
     };
     // Push the new todo item to the map of all posts.
