@@ -65,7 +65,7 @@ const TodoList: React.FC = () => {
 
       <div>
         {todos.map((todo: Todo) => (
-          <TodoListItem todo={todo} />
+          <TodoListItem key={todo.id} todo={todo} />
         ))}
       </div>
     </Box>

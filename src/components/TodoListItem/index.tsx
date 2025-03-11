@@ -81,6 +81,7 @@ const TodoListItem: React.FC<TodoListItemProps> = ({ todo }) => {
           <div style={{ flex: 1, width: "100%" }}>
             <TextBox
               id={`edit-todo-${todo.id}`}
+              data-testid="textbox"
               value={editText}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setEditText(e.target.value)
@@ -94,7 +95,12 @@ const TodoListItem: React.FC<TodoListItemProps> = ({ todo }) => {
               gap: "1rem",
             }}
           >
-            <Button onClick={() => handleEditTodo(todo.id)}>Save</Button>
+            <Button
+              data-testid={`save-button-${todo.id}`}
+              onClick={() => handleEditTodo(todo.id)}
+            >
+              Save
+            </Button>
             <Button onClick={() => setEditTodoId(null)}>Cancel</Button>
           </div>
         </div>
@@ -108,6 +114,7 @@ const TodoListItem: React.FC<TodoListItemProps> = ({ todo }) => {
           }}
         >
           <Button
+            data-testid={`edit-button-${todo.id}`}
             onClick={() => {
               setEditTodoId(todo.id);
               setEditText(todo.text);
@@ -115,7 +122,12 @@ const TodoListItem: React.FC<TodoListItemProps> = ({ todo }) => {
           >
             Edit
           </Button>
-          <Button onClick={() => handleDeleteTodo(todo.id)}>Delete</Button>
+          <Button
+            data-testid={`delete-button-${todo.id}`}
+            onClick={() => handleDeleteTodo(todo.id)}
+          >
+            Delete
+          </Button>
         </div>
       )}
     </div>

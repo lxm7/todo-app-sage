@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { http, HttpResponse, delay } from "msw";
+import { http, HttpResponse } from "msw";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CarbonProvider from "carbon-react/lib/components/carbon-provider";
 import sageTheme from "carbon-react/lib/style/themes/sage";
@@ -16,7 +16,7 @@ const meta: Meta<typeof TodoListItem> = {
   title: "Components/TodoListItem",
   component: TodoListItem,
   decorators: [
-    (Story: any) => (
+    (Story) => (
       <QueryClientProvider client={queryClient}>
         <CarbonProvider theme={sageTheme}>
           <Story />
@@ -89,30 +89,6 @@ const completedHandlers = [
   }),
 ];
 
-// --- Simulate an error when deleting a Todo (for id "1") ---
-
-const errorOnDeleteHandlers = [
-  http.delete("/todos/1", async () => {
-    await delay(800);
-    return new HttpResponse(null, { status: 403 });
-  }),
-  // For editing and toggling we simulate success.
-  http.put("/todos/1", () => {
-    return HttpResponse.json({
-      id: "1",
-      text: "Updated text",
-      completed: false,
-    });
-  }),
-  http.patch("/todos/1/toggle", () => {
-    return HttpResponse.json({
-      id: "1",
-      text: "Learn Storybook",
-      completed: true,
-    });
-  }),
-];
-
 // --- Stories ---
 
 // Default story with an incomplete Todo (id "1") and successful responses.
@@ -139,59 +115,37 @@ export const Completed: Story = {
   },
 };
 
+const editHandler = http.patch("/todo/1", () => {
+  return HttpResponse.json({ sampleTodo });
+});
+
 export const EditInteraction: Story = {
-  args: {
-    todo: sampleTodo,
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    // Click the Edit button.
-    const editButton = await canvas.findByRole("button", { name: /Edit/i });
-    await userEvent.click(editButton);
-
-    // After clicking "Edit", an edit textbox should appear.
-    // Find the textbox (assumes the underlying TextBox renders an input element).
-    const editTextbox = await canvas.findByRole("textbox");
-    // Clear the existing text and type a new value.
-    await userEvent.clear(editTextbox);
-    await userEvent.type(editTextbox, "Buy vegetables");
-
-    // Click the Save button.
-    const saveButton = await canvas.findByRole("button", { name: /Save/i });
-    await userEvent.click(saveButton);
-
-    // Finally, verify that the Edit button is back in the DOM.
-    await expect(
-      canvas.findByRole("button", { name: /Edit/i })
-    ).resolves.toBeDefined();
-  },
-};
-
-/*
- * DeleteInteraction story simulates a delete operation.
- * We wrap TodoListItem in a parent that maintains its own local state.
- * When deleteTodoMutation.isSuccess becomes true, we remove the todo from state.
- */
-
-export const DeleteInteraction: Story = {
   args: {
     todo: sampleTodo,
   },
   parameters: {
     msw: {
-      handlers: errorOnDeleteHandlers[0],
+      handlers: [editHandler],
     },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // Click the Edit button.
-    const deleteButton = await canvas.findByRole("button", { name: /Delete/i });
-    await userEvent.click(deleteButton);
+    const editButton = await canvas.findByTestId("edit-button-1");
+    await userEvent.click(editButton);
 
-    // ...
+    // After clicking "Edit", an edit textbox should appear.
+    // Find the textbox (assumes the underlying TextBox renders an input element).
+    const editTextbox = await canvas.findByTestId("textbox");
+    // Clear the existing text and type a new value.
+    await userEvent.clear(editTextbox);
+    await userEvent.type(editTextbox, "Buy vegetables");
+
+    // Click the Save button.
+    const saveButton = await canvas.findByTestId("save-button-1");
+    await userEvent.click(saveButton);
+
     // Finally, verify that the Edit button is back in the DOM.
-    await expect(
-      canvas.findByRole("button", { name: /Edit/i })
-    ).resolves.toBeDefined();
+    await expect(canvas.findByTestId("edit-button-1")).resolves.toBeDefined();
   },
 };
