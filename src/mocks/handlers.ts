@@ -1,13 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { v4 as uuidv4 } from "uuid";
 
-interface Todo {
-  id: string;
-  text: string;
-  completed: boolean;
-}
-
-type TodoTextInput = Partial<Pick<Todo, "text" | "completed">>;
+import type { Todo, TodoTextInput } from "../components/TodoListItem";
 
 // Initial in-memory list of todos
 let allTodos: Map<string, Todo> = new Map<string, Todo>([
@@ -21,12 +15,13 @@ export const handlers = [
   http.get("/favicon.ico", ({ request }) => {
     return HttpResponse.text("", { status: 200 });
   }),
-  // GET ALL
+
+  // READ / GET ALL
   http.get("/todos", ({ request }) => {
-    console.log({ allTodos });
     return HttpResponse.json(Array.from(allTodos.values()));
   }),
-  // ADD
+
+  // CREATE
   http.post("/todos", async ({ request }) => {
     const { text } = (await request.json()) as TodoTextInput;
 
@@ -42,6 +37,7 @@ export const handlers = [
     // response and send back the newly created post!
     return HttpResponse.json(newTodo, { status: 201 });
   }),
+
   // DELETE
   http.delete("/todo/:id", ({ request, params }) => {
     // All request path params are provided in the "params"
@@ -63,6 +59,7 @@ export const handlers = [
     // Respond with a "200 OK" response and the deleted Todo.
     return HttpResponse.json(deletedTodo);
   }),
+
   // UPDATE
   http.patch("/todo/:id", async ({ request, params }) => {
     const { id } = params;

@@ -1,5 +1,5 @@
-import { fetchTodos, postTodo, removeTodo, patchTodo, toggleTodo } from "./";
-import type { Todo } from "../components/TodoList";
+import { fetchTodos, postTodo, removeTodo, patchTodo, toggleTodo } from ".";
+import type { Todo } from "../components/TodoListItem";
 
 // Set a default fetch mock (will be re-mocked in individual tests)
 global.fetch = jest.fn(() =>

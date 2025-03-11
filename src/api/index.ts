@@ -55,7 +55,6 @@ export const patchTodo = async ({
   return res.json();
 };
 
-// PATCH to toggle a todo's completed state
 export const toggleTodo = async ({
   id,
   text,
