@@ -1,4 +1,5 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import { ReactNode, useEffect, useState } from "react";
+import type { Meta, StoryObj, StoryFn } from "@storybook/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { delay, http, HttpResponse } from "msw";
 import { userEvent, waitFor, within } from "@storybook/testing-library";
@@ -18,11 +19,32 @@ let sampleTodos: Todo[] = [
   { id: "3", text: "Read a book", completed: false },
 ];
 
+const withResetState = (Story: StoryFn) => {
+  const [resetKey, setResetKey] = useState(0);
+
+  useEffect(() => {
+    return () => {
+      // Increment the key when the story is unmounted
+      setResetKey((prev) => prev + 1);
+    };
+  }, []);
+
+  // Reset the mock data when the story is mounted
+  sampleTodos = [
+    { id: "1", text: "Buy groceries", completed: false },
+    { id: "2", text: "Walk the dog", completed: true },
+    { id: "3", text: "Read a book", completed: false },
+  ];
+
+  return <div key={resetKey}>{Story({}, { args: {} } as any)}</div>;
+};
+
 // Meta configuration for Storybook
 const meta: Meta<typeof TodoList> = {
   title: "Components/TodoList",
   component: TodoList,
   decorators: [
+    withResetState,
     (Story) => (
       <QueryClientProvider client={queryClient}>
         <CarbonProvider theme={sageTheme}>
