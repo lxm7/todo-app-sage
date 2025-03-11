@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import Button from "carbon-react/lib/components/button";
 import TextBox from "carbon-react/lib/components/textbox";
-import Box from "carbon-react/lib/components/box";
 import { useQuery } from "@tanstack/react-query";
 
 import TodoListItem from "../TodoListItem";
@@ -38,7 +37,8 @@ const TodoList: React.FC = () => {
   if (error) return <div>Error loading todos</div>;
 
   return (
-    <Box margin="var(--spacing200)">
+    <div>
+      <br />
       <div
         style={{
           marginBottom: "1rem",
@@ -68,7 +68,7 @@ const TodoList: React.FC = () => {
           <TodoListItem key={todo.id} todo={todo} />
         ))}
       </div>
-    </Box>
+    </div>
   );
 };
 

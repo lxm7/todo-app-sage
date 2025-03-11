@@ -6,7 +6,6 @@ import GlobalStyle from "carbon-react/lib/style/global-style";
 import "carbon-react/lib/style/fonts.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-// import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 

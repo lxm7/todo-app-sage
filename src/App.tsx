@@ -1,15 +1,18 @@
 import Typography from "carbon-react/lib/components/typography";
+import Box from "carbon-react/lib/components/box";
+
 import TodoList from "./components/TodoList";
-import "./App.css";
 
 function App() {
   return (
-    <div className="App">
+    <Box margin="var(--spacing400)">
       <header>
         <Typography variant="h1">Todo app</Typography>
-        <TodoList />
       </header>
-    </div>
+      <main>
+        <TodoList />
+      </main>
+    </Box>
   );
 }
 
